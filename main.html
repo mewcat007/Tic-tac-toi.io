@@ -1,1 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
 
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            margin-top: 20px;
+            visibility: hidden; /* Hidden by default */
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .cell:hover {
+            background-color: #ddd;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        #reset-button {
+            margin-top: 20px;
+            background-color: #dc3545;
+            visibility: hidden; /* Hidden by default */
+        }
+
+        #reset-button:hover {
+            background-color: #c82333;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            #game-board {
+                grid-template-columns: repeat(3, 80px);
+                grid-template-rows: repeat(3, 80px);
+            }
+
+            .cell {
+                width: 80px;
+                height: 80px;
+                font-size: 2.5em;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            button {
+                font-size: 1em;
+                padding: 8px 15px;
+            }
+
+            #status {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tic Tac Toe</h1>
+        <div id="home-screen">
+            <button id="start-game-button">Start Game</button>
+        </div>
+        <div id="game-screen" style="display: none;">
+            <div id="status">Player X's Turn</div>
+            <div id="game-board">
+                <div class="cell" data-cell-index="0"></div>
+                <div class="cell" data-cell-index="1"></div>
+                <div class="cell" data-cell-index="2"></div>
+                <div class="cell" data-cell-index="3"></div>
+                <div class="cell" data-cell-index="4"></div>
+                <div class="cell" data-cell-index="5"></div>
+                <div class="cell" data-cell-index="6"></div>
+                <div class="cell" data-cell-index="7"></div>
+                <div class="cell" data-cell-index="8"></div>
+            </div>
+            <button id="reset-button">Reset Game</button>
+        </div>
+    </div>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const statusDisplay = document.getElementById('status');
+        const resetButton = document.getElementById('reset-button');
+        const startGameButton = document.getElementById('start-game-button');
+        const homeScreen = document.getElementById('home-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const gameBoard = document.getElementById('game-board');
+
+        let gameActive = false;
+        let currentPlayer = 'X';
+        let gameState = ['', '', '', '', '', '', '', '', '']; // Represents the board state
+
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        const handleCellPlayed = (clickedCell, clickedCellIndex) => {
+            gameState[clickedCellIndex] = currentPlayer;
+            clickedCell.innerHTML = currentPlayer;
+        };
+
+        const handlePlayerChange = () => {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            statusDisplay.innerHTML = `Player ${currentPlayer}'s Turn`;
+        };
+
+        const handleResultValidation = () => {
+            let roundWon = false;
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                let a = gameState[winCondition[0]];
+                let b = gameState[winCondition[1]];
+                let c = gameState[winCondition[2]];
+                if (a === '' || b === '' || c === '') {
+                    continue;
+                }
+                if (a === b && b === c) {
+                    roundWon = true;
+                    break;
+                }
+            }
+
+            if (roundWon) {
+                statusDisplay.innerHTML = `Player ${currentPlayer} has Won!`;
+                gameActive = false;
+                resetButton.style.visibility = 'visible';
+                return;
+            }
+
+            let roundDraw = !gameState.includes('');
+            if (roundDraw) {
+                statusDisplay.innerHTML = `It's a Draw!`;
+                gameActive = false;
+                resetButton.style.visibility = 'visible';
+                return;
+            }
+
+            handlePlayerChange();
+        };
+
+        const handleCellClick = (event) => {
+            const clickedCell = event.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-cell-index'));
+
+            if (gameState[clickedCellIndex] !== '' || !gameActive) {
+                return;
+            }
+
+            handleCellPlayed(clickedCell, clickedCellIndex);
+            handleResultValidation();
+        };
+
+        const handleResetGame = () => {
+            gameActive = true;
+            currentPlayer = 'X';
+            gameState = ['', '', '', '', '', '', '', '', ''];
+            statusDisplay.innerHTML = `Player ${currentPlayer}'s Turn`;
+            cells.forEach(cell => cell.innerHTML = '');
+            resetButton.style.visibility = 'hidden';
+        };
+
+        const handleStartGame = () => {
+            homeScreen.style.display = 'none';
+            gameScreen.style.display = 'block';
+            gameBoard.style.visibility = 'visible';
+            handleResetGame(); // Initialize game state for the first time
+        };
+
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        resetButton.addEventListener('click', handleResetGame);
+        startGameButton.addEventListener('click', handleStartGame);
+    </script>
+</body>
+  </html>
